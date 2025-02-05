@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  php:
+    build: .
+    volumes:
+      - ../.:/var/www/html
+    working_dir: /var/www/html
+    ports:
+      - "8081:80"
+
+  kafka:
+    image: bitnami/kafka:latest
+    ports:
+      - "9092:9092" # Kafka client (PLAINTEXT) listener
+      - "9093:9093" # Internal controller listener (for KRaft)
+    environment:
+      # Enable KRaft mode (without ZooKeeper)
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      # Instead of binding to 0.0.0.0 explicitly, use blank host parts so that Kafka
+      # binds on all interfaces without “advertising” 0.0.0.0.
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      # Advertise a routable hostname (the container name) for the PLAINTEXT listener.
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      # Define the mapping for the listener protocols.
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      # Allow plaintext connections.
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "echo > /dev/tcp/localhost/9092" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "8080:8080"
+    environment:
+      # Define a single cluster to be managed by the UI.
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+    depends_on:
+      - kafka
