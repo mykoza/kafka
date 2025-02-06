@@ -11,7 +11,7 @@ $conf->set('metadata.broker.list', 'kafka:9092');
 $conf->set('group.id', 'consumer-of-topic-test-2');
 
 $consumer = new \RdKafka\KafkaConsumer($conf);
-$consumer->subscribe(['test-2']);
+$consumer->subscribe(['test-3']);
 
 while (true) {
     $message = $consumer->consume(15 * 1000);

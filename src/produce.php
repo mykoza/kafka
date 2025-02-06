@@ -9,7 +9,7 @@ $conf->set('metadata.broker.list', 'kafka:9092');
 
 $producer = new \RdKafka\Producer($conf);
 
-$topic = $producer->newTopic("test-2");
+$topic = $producer->newTopic("test-3");
 
 $i = 0;
 
